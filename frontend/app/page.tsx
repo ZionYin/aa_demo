@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import { ethers } from 'ethers'
-import { greeterAbi, greeterAddress } from '@/interact'
 import { useState, useEffect } from 'react'
+import { MetaMaskButton } from '@metamask/sdk-react-ui';
+import { greeterAddress, greeterAbi } from '../config'
 
 export default function Home() {
   const [greeting, setGreetingValue] = useState('')
@@ -37,6 +38,7 @@ export default function Home() {
       <h1 className="text-6xl font-bold text-center">
         Welcome to the AA demo!
       </h1>
+      <MetaMaskButton />
       <div className="flex flex-col items-center justify-center">
         <div>
           <p className="text-2xl font-bold text-center">
