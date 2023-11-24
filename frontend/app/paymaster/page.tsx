@@ -35,7 +35,7 @@ export default function Paymaster() {
             paymasterAPI
         });
 
-        const address = await accountAPI.getCounterFactualAddress();
+        const address = await accountAPI.getAccountAddress();
         console.log(`Account address: ${address}`);
 
 
@@ -47,34 +47,49 @@ export default function Paymaster() {
 
         // Build the user operation
         const accountContract = await accountAPI._getAccountContract();
-        const fee = await provider.send("eth_maxPriorityFeePerGas", []);
-        const block = await provider.getBlock("latest");
-        const tip = ethers.BigNumber.from(fee);
-        const buffer = tip.div(100).mul(13);
-        const maxPriorityFeePerGas = tip.add(buffer);
-        const callGasLimit = 1000000;
-        const maxFeePerGas = block.baseFeePerGas
-            ? block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas)
-            : maxPriorityFeePerGas;
+        // const fee = await provider.send("eth_maxPriorityFeePerGas", []);
+        // const block = await provider.getBlock("latest");
+        // const tip = ethers.BigNumber.from(fee);
+        // const buffer = tip.div(100).mul(13);
+        // const maxPriorityFeePerGas = tip.add(buffer);
+        // const maxFeePerGas = block.baseFeePerGas
+        //     ? block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas)
+        //     : maxPriorityFeePerGas;
+
+        // console.log(`Max priority fee per gas: ${maxPriorityFeePerGas}`);
+        // console.log(`Max fee per gas: ${maxFeePerGas}`);
+        console.log("callTo: ", callTo)
+        console.log("callData: ", callData)
+        console.log("accountContract: ", accountContract)
 
         const op = await accountAPI.createSignedUserOp({
-            target: greeterAddress,
+            target: address,
             data: accountContract.interface.encodeFunctionData("execute", [callTo, 0, callData]),
-            ... { maxFeePerGas, maxPriorityFeePerGas, callGasLimit }
         });
+
+        // const op = await accountAPI.createSignedUserOp({
+        //     target: address,
+        //     data: accountContract.interface.encodeFunctionData("execute", [callTo, 0, callData]),
+        //     ... { maxFeePerGas, maxPriorityFeePerGas }
+        // });
+        // const op = await accountAPI.createSignedUserOp({
+        //     target: greeterAddress,
+        //     data: accountContract.interface.encodeFunctionData("executeBatch", [callTo, callData]),
+        //     ... { maxFeePerGas, maxPriorityFeePerGas }
+        // });
 
         console.log("Signed User Operation: ");
         console.log(op);
 
         // Send the user operation
-        const chainId = await provider.getNetwork().then((net => net.chainId));
-        const client = new HttpRpcClient(rpcUrl, entryPointAddress, chainId);
-        const userOpHash = await client.sendUserOpToBundler(op);
+        // const chainId = await provider.getNetwork().then((net => net.chainId));
+        // const client = new HttpRpcClient(rpcUrl, entryPointAddress, chainId);
+        // const userOpHash = await client.sendUserOpToBundler(op);
 
-        console.log("Waiting for transaction...");
-        const transactionHash = await accountAPI.getUserOpReceipt(userOpHash);
-        console.log(`Transaction hash: ${transactionHash}`);
-        console.log(`View here: https://jiffyscan.xyz/userOpHash/${userOpHash}`);
+        // console.log("Waiting for transaction...");
+        // const transactionHash = await accountAPI.getUserOpReceipt(userOpHash);
+        // console.log(`Transaction hash: ${transactionHash}`);
+        // console.log(`View here: https://jiffyscan.xyz/userOpHash/${userOpHash}`);
     }
 
     const getGreeting = async () => {
