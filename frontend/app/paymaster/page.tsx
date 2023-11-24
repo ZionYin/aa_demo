@@ -4,22 +4,24 @@ import { ethers } from 'ethers'
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { useState, useEffect } from 'react'
 import { greeterAddress, greeterAbi } from '@/config'
-import { PaymasterAPI, calcPreVerificationGas, SimpleAccountAPI } from '@account-abstraction/sdk';
-import { UserOperationStruct } from '@account-abstraction/contracts';
-import { HttpRpcClient } from '@account-abstraction/sdk';
+import { SimpleAccountAPI } from '@account-abstraction/sdk';
 import { VerifyingPaymasterAPI } from '@/utils/VerifyingPaymasterAPI';
+import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient";
+import { config } from 'process';
 
-const rpcUrl = "https://public.stackup.sh/api/v1/node/ethereum-sepolia";
-const paymasterUrl = "https://public.stackup.sh/api/v1/paymaster/ethereum-sepolia";
-// Create the paymaster API
+
+const rpcUrl = "https://api.stackup.sh/v1/node/14270a069b7e95efda8ebf502132e2379c688d4bcd21bed939f84d53c2cb4981";
+const paymasterUrl = "https://api.stackup.sh/v1/paymaster/14270a069b7e95efda8ebf502132e2379c688d4bcd21bed939f84d53c2cb4981";
 const entryPointAddress = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
-const paymaster = new VerifyingPaymasterAPI(paymasterUrl, entryPointAddress);
 
 export default function Paymaster() {
     const [greeting, setGreetingValue] = useState('')
     const [greetingDisplay, setGreetingDisplay] = useState('')
 
     const help = async () => {
+        // Create the paymaster API
+        const paymasterAPI = new VerifyingPaymasterAPI(paymasterUrl, entryPointAddress);
+
         // Initialize the account
         const provider = new JsonRpcProvider(rpcUrl);
         const factoryAddress = "0x9406Cc6185a346906296840746125a0E44976454";
@@ -29,14 +31,50 @@ export default function Paymaster() {
             provider,
             entryPointAddress,
             owner,
-            factoryAddress
+            factoryAddress,
+            paymasterAPI
         });
-        console.log("provider: ", provider);
-        console.log("owner: ", owner);
-        console.log("accountAPI: ", accountAPI);
 
         const address = await accountAPI.getCounterFactualAddress();
         console.log(`Account address: ${address}`);
+
+
+
+        // Encode the calls
+        const greeter = new ethers.Contract(greeterAddress, greeterAbi, provider);
+        const callTo = greeterAddress;
+        const callData = greeter.interface.encodeFunctionData("setGreeting", [greeting]);
+
+        // Build the user operation
+        const accountContract = await accountAPI._getAccountContract();
+        const fee = await provider.send("eth_maxPriorityFeePerGas", []);
+        const block = await provider.getBlock("latest");
+        const tip = ethers.BigNumber.from(fee);
+        const buffer = tip.div(100).mul(13);
+        const maxPriorityFeePerGas = tip.add(buffer);
+        const callGasLimit = 1000000;
+        const maxFeePerGas = block.baseFeePerGas
+            ? block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas)
+            : maxPriorityFeePerGas;
+
+        const op = await accountAPI.createSignedUserOp({
+            target: greeterAddress,
+            data: accountContract.interface.encodeFunctionData("execute", [callTo, 0, callData]),
+            ... { maxFeePerGas, maxPriorityFeePerGas, callGasLimit }
+        });
+
+        console.log("Signed User Operation: ");
+        console.log(op);
+
+        // Send the user operation
+        const chainId = await provider.getNetwork().then((net => net.chainId));
+        const client = new HttpRpcClient(rpcUrl, entryPointAddress, chainId);
+        const userOpHash = await client.sendUserOpToBundler(op);
+
+        console.log("Waiting for transaction...");
+        const transactionHash = await accountAPI.getUserOpReceipt(userOpHash);
+        console.log(`Transaction hash: ${transactionHash}`);
+        console.log(`View here: https://jiffyscan.xyz/userOpHash/${userOpHash}`);
     }
 
     const getGreeting = async () => {
