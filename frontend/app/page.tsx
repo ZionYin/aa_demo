@@ -1,14 +1,20 @@
 "use client";
 
-import Image from 'next/image'
 import { ethers } from 'ethers'
 import { useState, useEffect } from 'react'
 import { MetaMaskButton } from '@metamask/sdk-react-ui';
 import { greeterAddress, greeterAbi } from '../config'
+import WalletModal from './components/WalletModal'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { createStore } from '@wagmi/mipd';
+import { useSyncExternalStore } from 'react';
 
 export default function Home() {
   const [greeting, setGreetingValue] = useState('')
   const [greetingDisplay, setGreetingDisplay] = useState('')
+  const [showWallets, setShowWallets] = useState(false)
+  const store = createStore();
+  const providers = useSyncExternalStore(store.subscribe, store.getProviders)
 
   const getGreeting = async () => {
     const provider = new ethers.BrowserProvider(window.ethereum!)
@@ -29,9 +35,6 @@ export default function Home() {
   useEffect(() => {
     getGreeting()
   }, [])
-
-
-
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -58,8 +61,21 @@ export default function Home() {
           >
             Set greeting
           </button>
+          <div>
+            <button
+              className="p-2 border-2 border-black rounded-lg"
+              onClick={() => setShowWallets(true)}
+            >
+              Get wallets
+            </button>
+          </div>
         </div>
       </div>
+      <WalletModal
+        show={showWallets}
+        handleClose={() => setShowWallets(false)}
+        wallets={providers}
+      />
     </main>
   )
 }
