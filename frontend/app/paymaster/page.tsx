@@ -6,13 +6,14 @@ import { useState, useEffect } from 'react'
 import { greeterAddress, greeterAbi } from '@/config'
 import { SimpleAccountAPI } from '@account-abstraction/sdk';
 import { VerifyingPaymasterAPI } from '@/utils/VerifyingPaymasterAPI';
-import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient";
+import { HttpRpcClient, DefaultGasOverheads } from "@account-abstraction/sdk";
 import { config } from 'process';
 
 
-const rpcUrl = "https://api.stackup.sh/v1/node/14270a069b7e95efda8ebf502132e2379c688d4bcd21bed939f84d53c2cb4981";
+const rpcUrl = "https://public.stackup.sh/api/v1/node/ethereum-sepolia";
 const paymasterUrl = "https://api.stackup.sh/v1/paymaster/14270a069b7e95efda8ebf502132e2379c688d4bcd21bed939f84d53c2cb4981";
 const entryPointAddress = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
+const providerUrl = "https://sepolia.infura.io/v3/b2b8c9e52dd34ab0b3b3be6a72c093af"
 
 export default function Paymaster() {
     const [greeting, setGreetingValue] = useState('')
@@ -20,10 +21,10 @@ export default function Paymaster() {
 
     const help = async () => {
         // Create the paymaster API
-        const paymasterAPI = new VerifyingPaymasterAPI(paymasterUrl, entryPointAddress);
+        // const paymasterAPI = new VerifyingPaymasterAPI(paymasterUrl, entryPointAddress);
 
         // Initialize the account
-        const provider = new JsonRpcProvider(rpcUrl);
+        const provider = new JsonRpcProvider(providerUrl);
         const factoryAddress = "0x9406Cc6185a346906296840746125a0E44976454";
         const signingKey = "0x4337433743374337433743374337433743374337433743374337433743374337";
         const owner = new ethers.Wallet(signingKey);
@@ -32,7 +33,9 @@ export default function Paymaster() {
             entryPointAddress,
             owner,
             factoryAddress,
-            paymasterAPI
+            overheads: {
+                zeroByte: DefaultGasOverheads.nonZeroByte,
+            },
         });
 
         const address = await accountAPI.getAccountAddress();
@@ -63,8 +66,8 @@ export default function Paymaster() {
         console.log("accountContract: ", accountContract)
 
         const op = await accountAPI.createSignedUserOp({
-            target: address,
-            data: accountContract.interface.encodeFunctionData("execute", [callTo, 0, callData]),
+            target: greeterAddress,
+            data: greeter.interface.encodeFunctionData("setGreeting", [greeting]),
         });
 
         // const op = await accountAPI.createSignedUserOp({
@@ -82,13 +85,15 @@ export default function Paymaster() {
         console.log(op);
 
         // Send the user operation
-        // const chainId = await provider.getNetwork().then((net => net.chainId));
-        // const client = new HttpRpcClient(rpcUrl, entryPointAddress, chainId);
+        const chainId = await provider.getNetwork().then((net => net.chainId));
+        const client = new HttpRpcClient(rpcUrl, entryPointAddress, chainId);
         // const userOpHash = await client.sendUserOpToBundler(op);
 
-        // console.log("Waiting for transaction...");
+        console.log("Waiting for transaction...");
         // const transactionHash = await accountAPI.getUserOpReceipt(userOpHash);
         // console.log(`Transaction hash: ${transactionHash}`);
+        // const tx = await provider.getTransaction(transactionHash!);
+        // const receipt = await tx.wait();
         // console.log(`View here: https://jiffyscan.xyz/userOpHash/${userOpHash}`);
     }
 
