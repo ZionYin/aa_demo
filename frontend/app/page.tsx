@@ -4,10 +4,13 @@ import { ethers } from 'ethers'
 import { useState, useEffect } from 'react'
 import { MetaMaskButton } from '@metamask/sdk-react-ui';
 import { greeterAddress, greeterAbi } from '../config'
+
+import Link from 'next/link';
 import WalletModal from './components/WalletModal'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { createStore } from '@wagmi/mipd';
 import { useSyncExternalStore } from 'react';
+
 
 export default function Home() {
   const [greeting, setGreetingValue] = useState('')
@@ -17,7 +20,7 @@ export default function Home() {
   const providers = useSyncExternalStore(store.subscribe, store.getProviders)
 
   const getGreeting = async () => {
-    const provider = new ethers.BrowserProvider(window.ethereum!)
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any")
     const signer = await provider.getSigner()
     const greeter = new ethers.Contract(greeterAddress, greeterAbi, signer)
     const greeting = await greeter.greet()
@@ -25,7 +28,7 @@ export default function Home() {
   }
 
   const setGreeting = async () => {
-    const provider = new ethers.BrowserProvider(window.ethereum!)
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any")
     const signer = await provider.getSigner()
     const greeter = new ethers.Contract(greeterAddress, greeterAbi, signer)
     const tx = await greeter.setGreeting(greeting)
@@ -42,6 +45,7 @@ export default function Home() {
         Welcome to the AA demo!
       </h1>
       <MetaMaskButton />
+      <Link href="/paymaster"> Paymaster </Link>
       <div className="flex flex-col items-center justify-center">
         <div>
           <p className="text-2xl font-bold text-center">
