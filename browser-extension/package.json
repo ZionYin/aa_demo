@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
-    "test": "plasmo test"
+    "test": "plasmo test",
+    "postinstall": "sed -i.bak '/module/d' node_modules/@ethersproject/contracts/package.json"
   },
   "dependencies": {
     "@account-abstraction/sdk": "^0.6.0",

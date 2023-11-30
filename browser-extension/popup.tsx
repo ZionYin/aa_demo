@@ -26,6 +26,7 @@ function IndexPopup() {
   });
 
   const handleTest = async () => {
+    console.log("test in popup");
     const config = {
       bundlerUrl: rpcUrl,
       entryPointAddress
