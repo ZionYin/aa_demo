@@ -5,7 +5,6 @@ import { ethers } from "ethers";
 import { SimpleAccountAPI, wrapProvider } from "@account-abstraction/sdk";
 import { DefaultGasOverheads } from "@account-abstraction/sdk";
 
-
 const rpcUrl = "https://public.stackup.sh/api/v1/node/ethereum-sepolia";
 const paymasterUrl = "https://api.stackup.sh/v1/paymaster/14270a069b7e95efda8ebf502132e2379c688d4bcd21bed939f84d53c2cb4981";
 const entryPointAddress = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
@@ -27,17 +26,23 @@ function IndexPopup() {
   });
 
   const handleTest = async () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, { 
-        info: {
-          uuid: "350670db-19fa-4704-a166-e52e178b59d2",
-          name: "Example Wallet",
-          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
-          rdns: "com.example.wallet"
-        },
-        provider: null
-      });
-    });
+    const config = {
+      bundlerUrl: rpcUrl,
+      entryPointAddress
+    };
+    const wrappedProvider = await wrapProvider(provider, config, owner);
+
+    // chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    //   chrome.tabs.sendMessage(tabs[0].id, { 
+    //     info: {
+    //       uuid: "350670db-19fa-4704-a166-e52e178b59d2",
+    //       name: "Example Wallet",
+    //       icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
+    //       rdns: "com.example.wallet"
+    //     },
+    //     provider: null
+    //   });
+    // });
   }
 
   return (
