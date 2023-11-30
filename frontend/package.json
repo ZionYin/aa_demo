@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@account-abstraction/contracts": "^0.6.0",
+    "@account-abstraction/sdk": "^0.6.0",
     "@metamask/sdk-react-ui": "^0.12.2",
     "@wagmi/mipd": "^0.0.4",
     "bootstrap": "^5.3.2",
