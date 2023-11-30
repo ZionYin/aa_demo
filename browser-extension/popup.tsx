@@ -27,23 +27,23 @@ function IndexPopup() {
 
   const handleTest = async () => {
     console.log("test in popup");
-    const config = {
-      bundlerUrl: rpcUrl,
-      entryPointAddress
-    };
-    const wrappedProvider = await wrapProvider(provider, config, owner);
+    // const config = {
+    //   bundlerUrl: rpcUrl,
+    //   entryPointAddress
+    // };
+    // const wrappedProvider = await wrapProvider(provider, config, owner);
 
-    // chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    //   chrome.tabs.sendMessage(tabs[0].id, { 
-    //     info: {
-    //       uuid: "350670db-19fa-4704-a166-e52e178b59d2",
-    //       name: "Example Wallet",
-    //       icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
-    //       rdns: "com.example.wallet"
-    //     },
-    //     provider: null
-    //   });
-    // });
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { 
+        info: {
+          uuid: "350670db-19fa-4704-a166-e52e178b59d2",
+          name: "Example Wallet",
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
+          rdns: "com.example.wallet"
+        },
+        // provider: JSON.stringify(wrappedProvider),
+      });
+    });
   }
 
   return (
