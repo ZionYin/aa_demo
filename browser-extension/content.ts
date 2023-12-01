@@ -4,6 +4,7 @@ import { JsonRpcProvider } from "@ethersproject/providers"
 import { ethers } from "ethers";
 import { SimpleAccountAPI, wrapProvider } from "@account-abstraction/sdk";
 import { DefaultGasOverheads } from "@account-abstraction/sdk";
+import { v4 as uuidv4 } from "uuid";
 
 const rpcUrl = "https://public.stackup.sh/api/v1/node/ethereum-sepolia";
 // const paymasterUrl = "https://api.stackup.sh/v1/paymaster/14270a069b7e95efda8ebf502132e2379c688d4bcd21bed939f84d53c2cb4981";
@@ -27,79 +28,34 @@ const owner = new ethers.Wallet(signingKey);
 /**
  * Announces an EIP-1193 Provider.
  */
-export function announceProvider(detail) {
-  const event = new CustomEvent('eip6963:announceProvider', { detail: Object.freeze(detail) });
-  window.dispatchEvent(event);
-  const handler = () => window.dispatchEvent(event);
-  window.addEventListener('eip6963:requestProvider', handler);
-  return () => window.removeEventListener('eip6963:requestProvider', handler);
-}
-
-const announceEip6963Provider = async () => {
+const announceProvider = async () => {
   const info = {
-    uuid: "350670db-19fa-4704-a166-e52e178b59d2",
-    name: "Example Wallet",
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
+    uuid: uuidv4(),
+    name: "CSCD71 Wallet",
+    icon: "",
     rdns: "com.example.wallet"
   };
-
   const config = {
     bundlerUrl: rpcUrl,
     entryPointAddress
   };
-
   const wrappedProvider = await wrapProvider(provider, config, owner);
 
-  const detail = {
-    info,
-    provider: wrappedProvider,
-    test: "test"
-  };
+  window.dispatchEvent(
+    new CustomEvent("eip6963:announceProvider", {
+      detail: Object.freeze({
+        info,
+        // provider: wrappedProvider,
+      }),
+    })
+  );
+}
 
-  console.log("detail", detail);
+window.addEventListener(
+  "eip6963:requestProvider",
+  (event) => {
+    announceProvider();
+  }
+);
 
-  announceProvider(detail);
-
-  // console.log("info", info);
-  // console.log("wrapped provider", wrappedProvider);
-
-  // window.dispatchEvent(
-  //   new CustomEvent("eip6963:announceProvider", { detail })
-  // );
-};
-
-console.log("content script loaded");
-console.log("announcing provider");
-
-announceEip6963Provider()
-
-window.addEventListener("eip6963:requestProvider", () => {
-  announceEip6963Provider()
-});
-
-
-
-// chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-//   const info = {
-//     uuid: "350670db-19fa-4704-a166-e52e178b59d2",
-//     name: "Example Wallet",
-//     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
-//     rdns: "com.example.wallet"
-//   };
-
-//   const config = {
-//     bundlerUrl: rpcUrl,
-//     entryPointAddress
-//   };
-
-//   const wrappedProvider = await wrapProvider(provider, config, owner);
-
-//   window.dispatchEvent(
-//     new CustomEvent("eip6963:announceProvider", {
-//       detail: { 
-//         info,
-//         provider: wrappedProvider
-//       },
-//     })
-//   );
-// });
+announceProvider();
